@@ -1,0 +1,12 @@
+# .gitignore
+
+
+
+app.yaml
+.idea/
+.vscode/
+*.iml
+*.test
+*.prof
+*.DS_Store
+*.log
