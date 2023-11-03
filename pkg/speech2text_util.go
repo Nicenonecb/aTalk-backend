@@ -8,7 +8,7 @@ import (
 	"cloud.google.com/go/speech/apiv1/speechpb"
 )
 
-func CallSpeech2Text(data []byte, contentType string) (string, error) {
+func CallSpeech2Text(data []byte, languageCode string) (string, error) {
 	ctx := context.Background()
 
 	client, err := speech.NewClient(ctx)
@@ -20,7 +20,7 @@ func CallSpeech2Text(data []byte, contentType string) (string, error) {
 		Config: &speechpb.RecognitionConfig{
 			Encoding:        speechpb.RecognitionConfig_LINEAR16,
 			SampleRateHertz: 16000,
-			LanguageCode:    contentType, // "en-US", "zh-CN"
+			LanguageCode:    languageCode, // "en-US", "zh-CN"
 		},
 		Audio: &speechpb.RecognitionAudio{
 			AudioSource: &speechpb.RecognitionAudio_Content{Content: data},

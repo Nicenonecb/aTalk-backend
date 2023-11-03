@@ -7,7 +7,7 @@ import (
 	"log"
 )
 
-func CallText2Speech(text string, contentType string) ([]byte, error) {
+func CallText2Speech(text string, languageCode string) ([]byte, error) {
 	ctx := context.Background()
 
 	client, err := texttospeech.NewClient(ctx)
@@ -23,7 +23,7 @@ func CallText2Speech(text string, contentType string) ([]byte, error) {
 		// Build the voice request, select the language code ("en-US") and the SSML
 		// voice gender ("neutral").
 		Voice: &texttospeechpb.VoiceSelectionParams{
-			LanguageCode: contentType,
+			LanguageCode: languageCode,
 			SsmlGender:   texttospeechpb.SsmlVoiceGender_NEUTRAL,
 		},
 		// Select the type of audio file you want returned.
