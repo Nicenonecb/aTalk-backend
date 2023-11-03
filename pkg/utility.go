@@ -3,11 +3,13 @@ package pkg
 import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"
+	"os"
 	"regexp"
 	"time"
 )
 
-var jwtKey = []byte("your_secret_key") // 选择一个强密钥
+var keyString = os.Getenv("JWT_KEY")
+var jwtKey = []byte(keyString)
 
 type Claims struct {
 	UserID uuid.UUID `json:"UserID"`
