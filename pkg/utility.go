@@ -3,6 +3,7 @@ package pkg
 import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"
+	"regexp"
 	"time"
 )
 
@@ -34,4 +35,10 @@ func ValidateToken(tokenStr string) (*Claims, error) {
 		return nil, jwt.NewValidationError("Token has expired or is not valid", jwt.ValidationErrorExpired)
 	}
 	return claims, err
+}
+
+func IsValidEmail(email string) bool {
+	// 使用正则表达式来验证邮箱格式
+	re := regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`)
+	return re.MatchString(email)
 }

@@ -18,6 +18,10 @@ func (h *UserHandler) Register(c *gin.Context) {
 		response.SendBadRequestError(c, err.Error())
 		return
 	}
+	if !utility.IsValidEmail(user.Email) {
+		response.SendBadRequestError(c, "Invalid email address")
+		return
+	}
 	if err := h.Service.Register(&user); err != nil {
 		response.SendInternalServerError(c, err.Error())
 		return
