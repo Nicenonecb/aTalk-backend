@@ -6,19 +6,53 @@ import (
 	"aTalkBackEnd/internal/app/model"
 	"aTalkBackEnd/internal/app/repository"
 	"aTalkBackEnd/internal/app/service"
+	"fmt"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	_ "github.com/go-sql-driver/mysql"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"log"
 	"os"
 )
 
+func getDatabaseConnection() (*gorm.DB, error) {
+	_, onGoogleCloud := os.LookupEnv("GAE_ENV")
+
+	var dsn string
+	if onGoogleCloud {
+		// On Google Cloud - connect using Unix socket
+		dbUser := os.Getenv("DB_USER")
+		dbPwd := os.Getenv("DB_PASS")
+		dbName := os.Getenv("DB_NAME")
+		unixSocketPath := os.Getenv("INSTANCE_UNIX_SOCKET")
+
+		if dbUser == "" || dbPwd == "" || dbName == "" || unixSocketPath == "" {
+			log.Fatal("Environment variables DB_USER, DB_PASS, DB_NAME, and INSTANCE_UNIX_SOCKET must be set.")
+		}
+
+		dsn = fmt.Sprintf("%s:%s@unix(%s)/%s?parseTime=true&allowCleartextPasswords=1", dbUser, dbPwd, unixSocketPath, dbName)
+	} else {
+		dsn = os.Getenv("DB_CONNECTION_STRING")
+		if dsn == "" {
+			log.Fatal("Environment variable DB_CONNECTION_STRING must be set.")
+		}
+	}
+
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	if err != nil {
+		return nil, err
+	}
+
+	return db, nil
+}
+
 func SetupRoutes() *gin.Engine {
-	dbConnectionString := os.Getenv("DB_CONNECTION_STRING")
-	db, err := gorm.Open(mysql.Open(dbConnectionString), &gorm.Config{})
+	db, err := getDatabaseConnection()
 	if err != nil {
 		panic(err)
 	}
+
 	userHandler := &handler.UserHandler{
 		Service: &service.UserService{
 			Repo: &repository.UserRepository{
