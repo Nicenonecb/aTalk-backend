@@ -3,12 +3,14 @@ package handler
 import (
 	response "aTalkBackEnd/pkg"
 	speech2text "aTalkBackEnd/pkg"
+	"encoding/base64"
+	"fmt"
 	"github.com/gin-gonic/gin"
 )
 
 type SpeechRequest struct {
-	ContentType string `form:"contentType"`
-	AudioData   []byte `form:"audioData" binding:"required"`
+	ContentType string `json:"contentType"`
+	AudioData   string `json:"audioData"`
 }
 
 func Speech2TextHandler(c *gin.Context) {
@@ -19,8 +21,17 @@ func Speech2TextHandler(c *gin.Context) {
 		return
 	}
 
-	transcription, err := speech2text.CallSpeech2Text(req.AudioData, req.ContentType)
+	audioData, err := base64.StdEncoding.DecodeString(req.AudioData)
 	if err != nil {
+		fmt.Printf("Error decoding audio data: %v\n", err) // Log the error
+		response.SendBadRequestError(c, "Failed to decode audio data")
+		return
+	}
+
+	fmt.Println("req:", req)
+	transcription, err := speech2text.CallSpeech2Text(audioData)
+	if err != nil {
+		fmt.Printf("Error transcribing audio: %v\n", err) // Log the error
 		response.SendBadRequestError(c, "Failed to transcribe audio")
 		return
 	}
@@ -29,13 +40,18 @@ func Speech2TextHandler(c *gin.Context) {
 }
 
 type Text2SpeechRequest struct {
-	Content     string `json:"content" binding:"required"`
-	ContentType string `json:"contentType" binding:"required"`
+	Content string `json:"content" binding:"required"`
 }
 
 func Text2SpeechHandler(c *gin.Context) {
 	var req Text2SpeechRequest
-	audioData, err := response.CallText2Speech(req.Content, req.ContentType)
+	if err := c.BindJSON(&req); err != nil {
+		response.SendBadRequestError(c, "Invalid request body")
+		return
+	}
+
+	fmt.Println("req:", req)
+	audioData, err := response.CallText2Speech(req.Content)
 	if err != nil {
 		response.SendBadRequestError(c, "Failed to generate audio")
 		return

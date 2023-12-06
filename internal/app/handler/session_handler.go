@@ -117,7 +117,7 @@ func (h *SessionHandler) GetSessionDetails(c *gin.Context) {
 		fmt.Println("Error:", err)
 		return
 	}
-	audioData, err := response.CallText2Speech(content, session.Language)
+	audioData, err := response.CallText2Speech(content)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return

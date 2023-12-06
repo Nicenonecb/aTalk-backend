@@ -9,8 +9,9 @@ import (
 	"os"
 )
 
-var endpoint = os.Getenv("GPT_ENDPOINT")
+// var endpoint = os.Getenv("GPT_ENDPOINT")
 var bearerToken = os.Getenv("GPT_BEARER_TOKEN")
+var endpoint = "https://aigptx.top/v1/chat/completions"
 
 func GPTHandler(c *gin.Context) {
 	// 从请求中解析content字段
@@ -26,8 +27,17 @@ func GPTHandler(c *gin.Context) {
 	}
 
 	data := map[string]interface{}{
-		"model":       "gpt-3.5-turbo",
-		"messages":    []map[string]string{{"role": "user", "content": content}},
+		"model": "gpt-3.5-turbo",
+		"messages": []map[string]string{
+			{
+				"role":    "user",
+				"content": content,
+			},
+			{
+				"role":    "system",
+				"content": "You are a helpful assistant",
+			},
+		},
 		"temperature": 0.7,
 	}
 	jsonData, err := json.Marshal(data)
@@ -43,6 +53,7 @@ func GPTHandler(c *gin.Context) {
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+bearerToken)
+	req.Header.Add("User-Agent", "Apifox/1.0.0 (https://apifox.com)")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)

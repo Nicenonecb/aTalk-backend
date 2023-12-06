@@ -1,39 +1,41 @@
 package pkg
 
 import (
-	texttospeech "cloud.google.com/go/texttospeech/apiv1"
-	"cloud.google.com/go/texttospeech/apiv1/texttospeechpb"
-	"context"
-	"log"
+	"bytes"
+	"encoding/json"
+	"io/ioutil"
+	"net/http"
 )
 
-func CallText2Speech(text string, languageCode string) ([]byte, error) {
-	ctx := context.Background()
+func CallText2Speech(text string) ([]byte, error) {
+	var url = "https://aigptx.top/v1/audio/speech"
+	data := map[string]interface{}{
+		"model":           "tts-1",
+		"voice":           "alloy",
+		"input":           text,
+		"response_format": "mp3",
+		"speed":           "1.0",
+	}
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+bearerToken)
 
-	client, err := texttospeech.NewClient(ctx)
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
-	defer client.Close()
-	req := texttospeechpb.SynthesizeSpeechRequest{
-		// Set the text input to be synthesized.
-		Input: &texttospeechpb.SynthesisInput{
-			InputSource: &texttospeechpb.SynthesisInput_Text{Text: text},
-		},
-		// Build the voice request, select the language code ("en-US") and the SSML
-		// voice gender ("neutral").
-		Voice: &texttospeechpb.VoiceSelectionParams{
-			LanguageCode: languageCode,
-			SsmlGender:   texttospeechpb.SsmlVoiceGender_NEUTRAL,
-		},
-		// Select the type of audio file you want returned.
-		AudioConfig: &texttospeechpb.AudioConfig{
-			AudioEncoding: texttospeechpb.AudioEncoding_MP3,
-		},
-	}
-	resp, err := client.SynthesizeSpeech(ctx, &req)
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
-	return resp.AudioContent, nil
+	return body, nil
 }
