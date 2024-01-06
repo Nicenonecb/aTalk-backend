@@ -53,7 +53,6 @@ func GPTHandler(c *gin.Context) {
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+bearerToken)
-	req.Header.Add("User-Agent", "Apifox/1.0.0 (https://apifox.com)")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)

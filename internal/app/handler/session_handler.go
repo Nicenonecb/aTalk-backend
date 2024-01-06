@@ -15,12 +15,34 @@ type SessionHandler struct {
 	Service *service.SessionService
 }
 
-func (h *SessionHandler) ListSessions(c *gin.Context) {
-	sessions, err := h.Service.ListAllSessions()
+//func (h *SessionHandler) ListSessions(c *gin.Context) {
+//	sessions, err := h.Service.ListAllSessions()
+//	if err != nil {
+//		response.SendBadRequestError(c, err.Error())
+//		return
+//	}
+//	response.SendSuccess(c, sessions, "Sessions retrieved")
+//
+//}
+
+func (h *SessionHandler) ListUserSessions(c *gin.Context) {
+	userIDInterface, exists := c.Get("userName") // 确保这里的 "userName" 是正确的上下文键
+	if !exists {
+		response.SendInternalServerError(c, "User ID not found in context")
+		return
+	}
+	userID, ok := userIDInterface.(uuid.UUID)
+	if !ok {
+		response.SendInternalServerError(c, "User ID has an unexpected type")
+		return
+	}
+
+	sessions, err := h.Service.ListAllSessionsByUserID(userID)
 	if err != nil {
 		response.SendBadRequestError(c, err.Error())
 		return
 	}
+
 	response.SendSuccess(c, sessions, "Sessions retrieved")
 }
 

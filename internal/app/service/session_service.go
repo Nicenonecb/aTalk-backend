@@ -3,14 +3,19 @@ package service
 import (
 	"aTalkBackEnd/internal/app/model"
 	"aTalkBackEnd/internal/app/repository"
+	"github.com/google/uuid"
 )
 
 type SessionService struct {
 	Repo *repository.SessionRepository
 }
 
-func (s *SessionService) ListAllSessions() ([]model.Session, error) {
-	return s.Repo.GetAllSessions()
+//func (s *SessionService) ListAllSessions() ([]model.Session, error) {
+//	return s.Repo.GetSessionByID(id)
+//}
+
+func (s *SessionService) ListAllSessionsByUserID(userID uuid.UUID) ([]model.Session, error) {
+	return s.Repo.GetAllSessionsByUserID(userID)
 }
 
 func (s *SessionService) CreateSession(session *model.Session) error {

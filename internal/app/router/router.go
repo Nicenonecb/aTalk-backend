@@ -62,14 +62,16 @@ func SetupRoutes() *gin.Engine {
 	}
 	db.AutoMigrate(&model.User{})
 	db.AutoMigrate(&model.Session{})
+	config := cors.DefaultConfig()
+
+	config.AllowOrigins = []string{"http://127.0.0.1:8081", "http://localhost:8081", "https://aigptx.top"}
+	config.AllowMethods = []string{"GET", "POST", "OPTIONS"}
+	config.AllowHeaders = []string{"Origin", "Content-Type", "Authorization"}
 
 	r := gin.Default()
 	r.Use(middleware.CheckBruteForce)
-	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"http://127.0.0.1:8081"}
-	config.AllowMethods = []string{"GET", "POST", "OPTIONS"}
-	config.AllowHeaders = []string{"Origin", "Content-Type"}
 	r.Use(cors.New(config))
+	v1 := r.Group("/v1")
 
 	sessionService := &service.SessionService{
 		Repo: &repository.SessionRepository{DB: db},
@@ -77,23 +79,24 @@ func SetupRoutes() *gin.Engine {
 
 	sessionHandler := &handler.SessionHandler{Service: sessionService}
 
-	r.POST("/gpt-response", handler.GPTHandler)
+	v1.POST("/gpt-response", handler.GPTHandler)
 
-	r.GET("/ping", func(c *gin.Context) {
+	v1.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "pong",
 		})
 	})
-	r.POST("/register", userHandler.Register)
-	r.POST("/login", userHandler.Login)
-	r.GET("/sessions/:id/details", middleware.TokenAuthMiddleware(), sessionHandler.GetSessionDetails)
-	r.GET("/sessions", middleware.TokenAuthMiddleware(), sessionHandler.ListSessions)
-	r.POST("/sessions", middleware.TokenAuthMiddleware(), sessionHandler.CreateSession)
-	r.DELETE("/sessions/:id", middleware.TokenAuthMiddleware(), sessionHandler.DeleteSession)
-	r.PUT("/sessions/:id", middleware.TokenAuthMiddleware(), sessionHandler.UpdateSession)
-	r.POST("/dialogue", middleware.TokenAuthMiddleware(), handler.DialogueHandler)
-	r.POST("/upload", middleware.TokenAuthMiddleware(), handler.UploadToGCSHandler)
-	r.POST("/speech2text", middleware.TokenAuthMiddleware(), handler.Speech2TextHandler)
-	r.POST("/text2speech", middleware.TokenAuthMiddleware(), handler.Text2SpeechHandler)
+	v1.POST("/register", userHandler.Register)
+	v1.POST("/login", userHandler.Login)
+	v1.GET("/sessions/:id/details", middleware.TokenAuthMiddleware(), sessionHandler.GetSessionDetails)
+	v1.GET("/sessions", middleware.TokenAuthMiddleware(), sessionHandler.ListUserSessions)
+	v1.POST("/sessions", middleware.TokenAuthMiddleware(), sessionHandler.CreateSession)
+	v1.DELETE("/sessions/:id", middleware.TokenAuthMiddleware(), sessionHandler.DeleteSession)
+	v1.PUT("/sessions/:id", middleware.TokenAuthMiddleware(), sessionHandler.UpdateSession)
+	v1.POST("/dialogue", middleware.TokenAuthMiddleware(), handler.DialogueHandler)
+	v1.POST("/upload", middleware.TokenAuthMiddleware(), handler.UploadToGCSHandler)
+	v1.POST("/speech2text", middleware.TokenAuthMiddleware(), handler.Speech2TextHandler)
+	v1.POST("/text2speech", middleware.TokenAuthMiddleware(), handler.Text2SpeechHandler)
+
 	return r
 }
