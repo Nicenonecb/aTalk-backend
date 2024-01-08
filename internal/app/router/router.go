@@ -65,7 +65,7 @@ func SetupRoutes() *gin.Engine {
 	config := cors.DefaultConfig()
 
 	config.AllowOrigins = []string{"http://127.0.0.1:8081", "http://localhost:8081", "https://aigptx.top"}
-	config.AllowMethods = []string{"GET", "POST", "OPTIONS"}
+	config.AllowMethods = []string{"GET", "POST", "DELETE", "PUT", "OPTIONS"}
 	config.AllowHeaders = []string{"Origin", "Content-Type", "Authorization"}
 
 	r := gin.Default()

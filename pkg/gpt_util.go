@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 )
@@ -13,10 +13,11 @@ var endpoint = os.Getenv("GPT_ENDPOINT")
 var bearerToken = os.Getenv("GPT_BEARER_TOKEN")
 
 func CallGPT(content string) (string, error) {
+	fmt.Println("endpoint: ", endpoint)
+	fmt.Println("bearerToken: ", bearerToken)
 	data := map[string]interface{}{
-		"model":       "gpt-3.5-turbo",
-		"messages":    []map[string]string{{"role": "user", "content": content}},
-		"temperature": 0.7,
+		"model":    "gpt-4",
+		"messages": []map[string]string{{"role": "user", "content": content}},
 	}
 	jsonData, err := json.Marshal(data)
 	if err != nil {
@@ -37,7 +38,7 @@ func CallGPT(content string) (string, error) {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}

@@ -75,15 +75,15 @@ func (h *SessionHandler) DeleteSession(c *gin.Context) {
 	idStr := c.Param("id")
 	id64, err := strconv.ParseUint(idStr, 10, 32)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid session ID"})
+		response.SendBadRequestError(c, "Invalid session ID")
 		return
 	}
 	id := uint(id64)
 	if err := h.Service.DeleteSession(id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.SendInternalServerError(c, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "Session deleted"})
+	response.SendSuccess(c, nil, "Session deleted")
 }
 
 func (h *SessionHandler) UpdateSession(c *gin.Context) {
@@ -111,7 +111,7 @@ func (h *SessionHandler) GetSessionDetails(c *gin.Context) {
 	idStr := c.Param("id")
 	id64, err := strconv.ParseUint(idStr, 10, 32)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid session ID"})
+		response.SendBadRequestError(c, "Invalid session ID")
 		return
 	}
 	id := uint(id64)
@@ -119,29 +119,27 @@ func (h *SessionHandler) GetSessionDetails(c *gin.Context) {
 	// 获取 session 数据
 	session, err := h.Service.GetSessionByID(id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.SendInternalServerError(c, err.Error())
 		return
 	}
 	// 拼接 Language, Scene, Detail
-	concatenatedDetails := fmt.Sprintf("你现在是 %s 大师, 我想和您进行语言文字上的对话，场景是%s,具体细节为%s,请使用%s语言回复,不用回复好的等客套话，直接进入角色，开始第一句话", session.Language, session.Scene, session.Detail, session.Language)
+	concatenatedDetails := fmt.Sprintf("你现在是%s 大师, 我想和您进行语言文字上的对话，场景是%s,具体细节为%s,请使用%s语言回复,不用回复好的等客套话，直接进入角色，开始第一句话", session.Language, session.Scene, session.Detail, session.Language)
 
-	// 返回拼接的详情字符串
-
-	//c.JSON(http.StatusOK, gin.H{"details": concatenatedDetails})
-
+	// 调用 GPT
 	gptResponse, err := response.CallGPT(concatenatedDetails)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error calling GPT: " + err.Error()})
+		response.SendBadRequestError(c, err.Error())
 		return
 	}
+	fmt.Println("GPT response:", gptResponse)
 	content, err := response.ExtractContentFromGPTResponse(gptResponse)
 	if err != nil {
-		fmt.Println("Error:", err)
+		fmt.Println("Error11:", err)
 		return
 	}
 	audioData, err := response.CallText2Speech(content)
 	if err != nil {
-		fmt.Println("Error:", err)
+		fmt.Println("Error22:", err)
 		return
 	}
 	sessionResponse := SessionResponse{
