@@ -79,8 +79,6 @@ func SetupRoutes() *gin.Engine {
 
 	sessionHandler := &handler.SessionHandler{Service: sessionService}
 
-	v1.POST("/gpt-response", handler.GPTHandler)
-
 	v1.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "pong",
@@ -88,6 +86,8 @@ func SetupRoutes() *gin.Engine {
 	})
 	v1.POST("/register", userHandler.Register)
 	v1.POST("/login", userHandler.Login)
+
+	v1.POST("/gpt-res", middleware.TokenAuthMiddleware(), handler.GPTHandler)
 	v1.GET("/sessions/:id/details", middleware.TokenAuthMiddleware(), sessionHandler.GetSessionDetails)
 	v1.GET("/sessions", middleware.TokenAuthMiddleware(), sessionHandler.ListUserSessions)
 	v1.POST("/sessions", middleware.TokenAuthMiddleware(), sessionHandler.CreateSession)

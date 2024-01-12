@@ -131,20 +131,21 @@ func (h *SessionHandler) GetSessionDetails(c *gin.Context) {
 		response.SendBadRequestError(c, err.Error())
 		return
 	}
-	fmt.Println("GPT response:", gptResponse)
+
 	content, err := response.ExtractContentFromGPTResponse(gptResponse)
 	if err != nil {
 		fmt.Println("Error11:", err)
 		return
 	}
-	audioData, err := response.CallText2Speech(content)
-	if err != nil {
-		fmt.Println("Error22:", err)
-		return
-	}
+
+	//audioData, err := response.CallText2Speech(content)
+	//if err != nil {
+	//	fmt.Println("Error22:", err)
+	//	return
+	//}
 	sessionResponse := SessionResponse{
-		Content:       content,
-		ContentBinary: audioData,
+		Content: content,
+		//ContentBinary: audioData,
 	}
 	// 返回GPT的回复
 	response.SendSuccess(c, sessionResponse, "GPT response")

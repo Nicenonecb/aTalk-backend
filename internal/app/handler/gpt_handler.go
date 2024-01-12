@@ -1,10 +1,11 @@
 package handler
 
 import (
+	response "aTalkBackEnd/pkg"
 	"bytes"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 )
@@ -17,12 +18,12 @@ func GPTHandler(c *gin.Context) {
 	// 从请求中解析content字段
 	var requestData map[string]string
 	if err := c.BindJSON(&requestData); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response.SendBadRequestError(c, err.Error())
 		return
 	}
 	content, ok := requestData["content"]
 	if !ok {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "content field is required"})
+		response.SendInternalServerError(c, "content field is required")
 		return
 	}
 
@@ -33,22 +34,17 @@ func GPTHandler(c *gin.Context) {
 				"role":    "user",
 				"content": content,
 			},
-			{
-				"role":    "system",
-				"content": "You are a helpful assistant",
-			},
 		},
-		"temperature": 0.7,
 	}
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error marshalling data"})
+		response.SendInternalServerError(c, "Error marshalling data")
 		return
 	}
 
 	req, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonData))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating request"})
+		response.SendInternalServerError(c, "Error creating request")
 		return
 	}
 	req.Header.Set("Content-Type", "application/json")
@@ -57,17 +53,17 @@ func GPTHandler(c *gin.Context) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error sending request"})
+		response.SendBadRequestError(c, "Error sending request")
 		return
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error reading response"})
+		response.SendBadRequestError(c, "Error reading response body")
 		return
 	}
 
 	// 直接返回GPT API的响应
-	c.String(http.StatusOK, string(body))
+	response.SendSuccess(c, string(body), "GPT API response")
 }
