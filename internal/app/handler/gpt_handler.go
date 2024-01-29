@@ -21,12 +21,14 @@ func GPTHandler(c *gin.Context) {
 		response.SendBadRequestError(c, err.Error())
 		return
 	}
+
 	content, ok := requestData["content"]
 	if !ok {
 		response.SendInternalServerError(c, "content field is required")
 		return
 	}
 
+	// 构造请求数据
 	data := map[string]interface{}{
 		"model": "gpt-3.5-turbo",
 		"messages": []map[string]string{
@@ -36,12 +38,15 @@ func GPTHandler(c *gin.Context) {
 			},
 		},
 	}
+
+	// 序列化请求数据
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		response.SendInternalServerError(c, "Error marshalling data")
 		return
 	}
 
+	// 创建请求
 	req, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonData))
 	if err != nil {
 		response.SendInternalServerError(c, "Error creating request")
@@ -50,6 +55,7 @@ func GPTHandler(c *gin.Context) {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+bearerToken)
 
+	// 发送请求
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -58,12 +64,25 @@ func GPTHandler(c *gin.Context) {
 	}
 	defer resp.Body.Close()
 
+	// 读取响应体
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		response.SendBadRequestError(c, "Error reading response body")
 		return
 	}
+	bodyString := string(body)
+	// 提取GPT响应内容
+	content1, err := response.ExtractContentFromGPTResponse(bodyString)
+	if err != nil {
+		response.SendBadRequestError(c, "Error extracting content from GPT response")
+		return
+	}
 
-	// 直接返回GPT API的响应
-	response.SendSuccess(c, string(body), "GPT API response")
+	// 构造响应
+	sessionResponse := SessionResponse{
+		Content: content1,
+	}
+
+	// 发送响应
+	response.SendSuccess(c, sessionResponse, "GPT API response")
 }
